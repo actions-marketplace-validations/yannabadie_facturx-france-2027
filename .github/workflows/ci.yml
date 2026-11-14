@@ -1,0 +1,51 @@
+name: CI — Factur-X France 2027 Validator
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Python ${{ matrix.python-version }} (Zero-Dependency)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run unit & regulatory test suite
+        run: PYTHONDONTWRITEBYTECODE=1 python3 test_validator.py -v
+
+  composite-action-smoke:
+    name: Reusable GitHub Action Smoke Test
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Audit hybrid PDF/A-3 Factur-X (Franchise TVA art. 293 B)
+        uses: ./
+        with:
+          target: "./examples/facture_conforme_2027.pdf"
+          strict-2027: "true"
+
+      - name: Audit XML EN 16931 (TVA sur les débits + ShipTo distinct)
+        uses: ./
+        with:
+          target: "./examples/facture_conforme_tva_debits_en16931.xml"
+          strict-2027: "true"

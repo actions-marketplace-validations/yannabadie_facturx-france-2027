@@ -1,0 +1,62 @@
+name: "Factur-X France 2026-2027 Validator (EN 16931 & PDF/A-3)"
+author: "YGN — FacturKit"
+description: "Valide gratuitement les factures PDF/A-3 Factur-X, XML CII EN 16931 et les 4 mentions obligatoires françaises 2026-2027 (zéro dépendance)."
+
+branding:
+  icon: "check-circle"
+  color: "blue"
+
+inputs:
+  target:
+    description: "Chemin(s) d'un fichier .pdf / .xml ou d'un dossier de factures (séparés par des espaces)."
+    required: true
+    default: "."
+  strict-2027:
+    description: "Exige strictement les 4 nouvelles mentions B2B françaises 2026-2027 (true/false)."
+    required: false
+    default: "true"
+  allow-b2c:
+    description: "Autorise l'absence de SIREN acheteur pour les factures particuliers B2C (true/false)."
+    required: false
+    default: "false"
+  json:
+    description: "Affiche le rapport au format JSON structuré (true/false)."
+    required: false
+    default: "false"
+
+outputs:
+  exit-code:
+    description: "Code de retour de l'audit (0 = conforme, 1 = non conforme)."
+    value: ${{ steps.validate.outputs.exit_code }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run Factur-X France 2026-2027 Audit
+      id: validate
+      shell: bash
+      env:
+        INPUT_TARGET: ${{ inputs.target }}
+        INPUT_STRICT: ${{ inputs.strict-2027 }}
+        INPUT_ALLOW_B2C: ${{ inputs.allow-b2c }}
+        INPUT_JSON: ${{ inputs.json }}
+        VALIDATOR_SCRIPT: ${{ github.action_path }}/facturx_validator_2027.py
+      run: |
+        set +e
+        FLAGS=()
+        if [ "${INPUT_STRICT}" = "false" ]; then
+          FLAGS+=("--no-strict-2027")
+        else
+          FLAGS+=("--strict-2027")
+        fi
+        if [ "${INPUT_ALLOW_B2C}" = "true" ]; then
+          FLAGS+=("--allow-b2c")
+        fi
+        if [ "${INPUT_JSON}" = "true" ]; then
+          FLAGS+=("--json")
+        fi
+        # shellcheck disable=SC2086
+        PYTHONDONTWRITEBYTECODE=1 python3 "${VALIDATOR_SCRIPT}" "${FLAGS[@]}" ${INPUT_TARGET}
+        CODE=$?
+        echo "exit_code=${CODE}" >> "${GITHUB_OUTPUT}"
+        exit ${CODE}
