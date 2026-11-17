@@ -15,7 +15,7 @@
 > **Pas de terminal sous la main ? Testez une facture en 30 secondes dans votre navigateur :**
 > - **[Audit Éclair Conformité Facture 2026–2027 (Testeur Web 100 % Gratuit & Local)](https://yannabadie.github.io/facturkit-2027/audit-facture-gratuit.html)** — aucune donnée envoyée sur un serveur.
 > - **Besoin d'un générateur Factur-X sans abonnement ?** Découvrez **[FacturKit 2027 & Studio Factur-X Local 2027](https://yannabadie.github.io/facturkit-2027/)** : création hors-ligne de devis et factures PDF/A-3 + XML Factur-X conformes EN 16931, carnet clients SIREN Luhn, inspecteur visuel et automatisations TPE en paiement unique (zéro abonnement mensuel).
-> - **Guides pratiques de la réforme** (micro-entreprise, franchise TVA 293 B, mentions obligatoires, erreurs BR-CO) : **[Validateur Factur-X gratuit & guides 2026–2027](https://yannabadie.github.io/validateur-factur-x/)**.
+> - **Guides pratiques de la réforme** (micro-entreprise, franchise TVA 293 B, mentions obligatoires, erreurs BR-CO) : **[Guides FacturKit 2026–2027](https://yannabadie.github.io/facturkit-2027/#guides-2027)**.
 
 ---
 
