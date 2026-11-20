@@ -248,7 +248,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 test_validator.py -v
   2. Explicit **operation category** (*Prestation de services*, *Livraison de biens*, or *Opération mixte*);
   3. Distinct **delivery address** (`ShipToTradeParty`) and actual supply date;
   4. Explicit **VAT exigigibility / exemption** (`DueDateTypeCode` `5` debits / `72` cash basis, or `VATEX-FR-FRANCHISE` art. 293 B CGI).
-- **Need an offline, subscription-free Factur-X generator?** Try our [free browser-based invoice auditor](https://yannabadie.github.io/facturkit-2027/audit-facture-gratuit.html) or explore **[FacturKit 2027 & Studio Factur-X Local 2027](https://yannabadie.github.io/facturkit-2027/)**.
+- **Need an offline, subscription-free Factur-X generator?** Try our [free browser-based invoice auditor](https://yannabadie.github.io/facturkit-2027/audit-facture-gratuit.html), read the **[English Compliance Cockpit overview](https://yannabadie.github.io/facturkit-2027/en.html)** (instant FR + EN bundle via [Gumroad Merchant of Record](https://yannabadi.gumroad.com/l/hfxuuz)), or explore the **[French Stripe Editions](https://yannabadie.github.io/facturkit-2027/)**.
 
 ---
 
