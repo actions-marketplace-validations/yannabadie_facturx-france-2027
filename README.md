@@ -9,7 +9,7 @@
 **`facturx-france-2027`** est un **validateur Factur-X gratuit en Python** (fichier unique `facturx_validator_2027.py`, **zéro dépendance externe**, bibliothèque standard Python 3 uniquement) accompagné d'une **GitHub Action réutilisable** pour auditer localement ou en CI/CD :
 
 1. Les **factures hybrides PDF/A-3 Factur-X** (extraction native de `factur-x.xml` depuis `/EmbeddedFiles`, vérification `/AF` et métadonnées XMP `fx:ConformanceLevel`) ;
-2. Les **flux XML UN/CEFACT CrossIndustryInvoice (CII D16B)** selon les profils officiels **Factur-X 1.0.07 / norme européenne EN 16931** (`MINIMUM`, `BASIC WL`, `BASIC`, `EN 16931`, `EXTENDED`) ;
+2. Les **flux XML UN/CEFACT CrossIndustryInvoice (CII D16B)** selon les profils officiels **Factur-X 1.09.2 / ZUGFeRD 2.5.2 (août 2026) / norme européenne EN 16931** (`MINIMUM`, `BASIC WL`, `BASIC`, `EN 16931`, `EXTENDED`) ;
 3. Les **4 nouvelles mentions obligatoires facture 2026–2027** imposées en France par le Décret n° 2022-1299 et l'article 242 nonies A du CGI (SIREN client validé par Luhn, catégorie de l'opération, adresse de livraison distincte, option TVA sur les débits ou franchise art. 293 B).
 
 > **Pas de terminal sous la main ? Testez une facture en 30 secondes dans votre navigateur :**
@@ -35,18 +35,19 @@
 
 ## 1. Calendrier officiel de la facturation électronique en France (2026–2027)
 
-Conformément à l'**article 91 de la Loi de finances pour 2024** (n° 2023-1322), la réforme de la facturation électronique B2B domestique (*e-invoicing*) et de la transmission des données de transaction (*e-reporting*) s'applique à **toutes les entreprises assujetties à la TVA établies en France, y compris les micro-entreprises en franchise en base de TVA (art. 293 B du CGI)** :
+Conformément à l'**article 91 de la Loi de finances pour 2024** (n° 2023-1322), au **Décret n° 2026-677 du 27 juillet 2026** et à l'**article 123 de la Loi n° 2026-103 du 19 février 2026 de finances pour 2026**, la réforme de la facturation électronique B2B domestique (*e-invoicing*) et de la transmission des données de transaction (*e-reporting*) s'applique à **toutes les entreprises assujetties à la TVA établies en France, y compris les micro-entreprises en franchise en base de TVA (art. 293 B du CGI)** :
 
 | Échéance légale | Entreprises concernées | Obligations applicables |
 | :--- | :--- | :--- |
-| **1er septembre 2026** | **Toutes les entreprises françaises** (Micro-entreprises, EI, TPE, PME, ETI, Grandes Entreprises) | **Obligation universelle de RÉCEPTION** des factures électroniques fournisseurs aux formats socles (**Factur-X**, UBL, CII) via une Plateforme Agréée (PA, ex-PDP). Un simple PDF « image » ou bureautique envoyé par email par une GE/ETI n'est plus une facture fiscale conforme. |
-| **1er septembre 2026** | Grandes Entreprises (GE) & Entreprises de Taille Intermédiaire (ETI) | **Obligation d'ÉMISSION** des factures électroniques B2B structurées + *e-reporting*. |
-| **1er septembre 2027** | **PME, TPE, artisans, professions libérales & micro-entrepreneurs** | **Obligation d'ÉMISSION** des factures électroniques B2B au format structuré (**Factur-X EN 16931**, UBL ou CII) + *e-reporting* B2C et international + application stricte des 4 nouvelles mentions obligatoires. |
+| **En vigueur depuis le 1er septembre 2026** | **Toutes les entreprises françaises** (Micro-entreprises, EI, TPE, PME, ETI, Grandes Entreprises) | **Obligation universelle de RÉCEPTION** des factures électroniques fournisseurs aux formats socles (**Factur-X 1.09.2**, UBL, CII) via une **Plateforme Agréée (PA)** (159 PA immatriculées après tests d'interopérabilité sur `impots.gouv.fr` au 16 novembre 2026). Un simple PDF « image » ou bureautique envoyé par email par une GE/ETI n'est plus une facture fiscale conforme. |
+| **En vigueur depuis le 1er septembre 2026** | Grandes Entreprises (GE) & Entreprises de Taille Intermédiaire (ETI) | **Obligation d'ÉMISSION** des factures électroniques B2B structurées + *e-reporting*. |
+| **1er septembre 2027** | **PME, TPE, artisans, professions libérales & micro-entrepreneurs** | **Obligation d'ÉMISSION** des factures électroniques B2B au format structuré (**Factur-X 1.09.2 / EN 16931**, UBL ou CII) + *e-reporting* B2C et international + application stricte des 4 nouvelles mentions obligatoires. |
 
-> **Sanctions fiscales prévues (CGI art. 1737 & art. 1788 D) :**
-> - **15 € d'amende par facture** non émise sous forme électronique structurée (plafonnée à 15 000 € par année civile) ;
-> - **250 € d'amende par transmission** d'*e-reporting* manquante (plafonnée à 15 000 € par an) ;
-> - **15 € par mention obligatoire manquante ou inexacte** sur une facture, en sus des sanctions pénales et commerciales de l'article L441-9 du Code de commerce (jusqu'à **75 000 €** pour une personne physique et **375 000 €** pour une société).
+> **Sanctions fiscales en vigueur (LFI 2026, art. 123 — CGI art. 1737 & art. 1788 D) :**
+> - **50 € d'amende par facture** non émise sous forme électronique structurée (plafonnée à 15 000 € par année civile, CGI art. 1737 III — revalorisée contre 15 € auparavant) ;
+> - **500 € d'amende par transmission** d'*e-reporting* manquante ou erronée (plafonnée à 15 000 € par an, CGI art. 1788 D — contre 250 € auparavant) ;
+> - **500 € puis 1 000 € par trimestre** en cas d'absence de Plateforme Agréée (PA) de réception après mise en demeure de 3 mois ;
+> - **15 € par mention obligatoire manquante ou inexacte** sur une facture (CGI art. 1737 II, plafonnée au quart du montant), en sus des sanctions commerciales de l'article L441-9 du Code de commerce (jusqu'à **75 000 €** pour une personne physique et **375 000 €** pour une société). Droit à l'erreur applicable pour une première infraction régularisée spontanément ou sous 30 jours.
 
 ---
 
@@ -228,7 +229,7 @@ Si vous cherchez un **générateur Factur-X sans abonnement** prêt à l'emploi 
 **Non.** Un PDF bureautique standard ne contient qu'une couche graphique. Une facture **Factur-X** est un fichier **PDF/A-3 hybride** qui embarque en pièce jointe interne (`/EmbeddedFiles` + `/AF`) un fichier XML normalisé `factur-x.xml` structuré selon la norme **UN/CEFACT CrossIndustryInvoice (EN 16931)**. Vous pouvez le vérifier immédiatement avec `python3 facturx_validator_2027.py ma_facture.pdf` ou sur le [testeur gratuit en ligne](https://yannabadie.github.io/facturkit-2027/audit-facture-gratuit.html).
 
 ### Les micro-entrepreneurs (auto-entrepreneurs) en franchise de TVA (art. 293 B) sont-ils concernés ?
-**Oui, intégralement.** Le fait d'être non redevable de la TVA (franchise en base, article 293 B du CGI) ne dispense ni de l'**obligation de réception au 1er septembre 2026**, ni de l'**obligation d'émission au 1er septembre 2027** pour vos clients professionnels (B2B), ni de l'*e-reporting* pour vos clients particuliers (B2C). Dans le XML Factur-X, la franchise en base se traduit par `CategoryCode = E`, `RateApplicablePercent = 0.00` et `ExemptionReasonCode = VATEX-FR-FRANCHISE`.
+**Oui, intégralement.** Le fait d'être non redevable de la TVA (franchise en base, article 293 B du CGI) ne dispense ni de l'**obligation de réception en vigueur depuis le 1er septembre 2026**, ni de l'**obligation d'émission au 1er septembre 2027** pour vos clients professionnels (B2B), ni de l'*e-reporting* pour vos clients particuliers (B2C). Dans le XML Factur-X, la franchise en base se traduit par `CategoryCode = E`, `RateApplicablePercent = 0.00` et `ExemptionReasonCode = VATEX-FR-FRANCHISE`.
 
 ### Comment lancer les tests unitaires du validateur ?
 ```bash
@@ -239,7 +240,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 test_validator.py -v
 
 ## 9. English Summary — Factur-X France 2027 Python Validator & GitHub Action
 
-**`facturx-france-2027`** is a lightweight, **zero-dependency Python 3 CLI & library** (MIT License) plus a **reusable GitHub Action** designed to validate hybrid **Factur-X 1.0.07 PDF/A-3 invoices** (compatible with ZUGFeRD 2.2 / EN 16931 UN/CEFACT CII) and audit compliance with the **French 2026–2027 mandatory e-invoicing reform**:
+**`facturx-france-2027`** is a lightweight, **zero-dependency Python 3 CLI & library** (MIT License) plus a **reusable GitHub Action** designed to validate hybrid **Factur-X 1.09.2 PDF/A-3 invoices** (compatible with ZUGFeRD 2.5.2 / EN 16931 UN/CEFACT CII) and audit compliance with the **French 2026–2027 mandatory e-invoicing reform** (mandatory reception live since **September 1, 2026**; SME/micro-enterprise emission on **September 1, 2027**; LFI 2026 art. 123 penalties: **50 €/invoice** & **500 €/e-reporting transmission**):
 
 - **Zero external dependencies**: uses Python's standard library only (`xml.etree.ElementTree`, `zlib`, `decimal`, `re`) — runs anywhere in `< 20 ms`.
 - **Hybrid PDF/A-3 extractor**: extracts embedded `factur-x.xml` streams (`/EmbeddedFiles`, `/AF`, `/FlateDecode`, `/ObjStm`) and cross-checks XMP `fx:ConformanceLevel`.
@@ -247,7 +248,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 test_validator.py -v
   1. Buyer 9-digit **SIREN** mathematical Luhn validation (`schemeID="0002"`), plus INSEE La Poste SIRET rule & French intra-EU VAT key calculation;
   2. Explicit **operation category** (*Prestation de services*, *Livraison de biens*, or *Opération mixte*);
   3. Distinct **delivery address** (`ShipToTradeParty`) and actual supply date;
-  4. Explicit **VAT exigigibility / exemption** (`DueDateTypeCode` `5` debits / `72` cash basis, or `VATEX-FR-FRANCHISE` art. 293 B CGI).
+  4. Explicit **VAT exigibility / exemption** (`DueDateTypeCode` `5` debits / `72` cash basis, or `VATEX-FR-FRANCHISE` art. 293 B CGI).
 - **Need an offline, subscription-free Factur-X generator?** Try our [free browser-based invoice auditor](https://yannabadie.github.io/facturkit-2027/audit-facture-gratuit.html), read the **[English Compliance Cockpit overview](https://yannabadie.github.io/facturkit-2027/en.html)** (instant FR + EN bundle via [Gumroad Merchant of Record](https://yannabadi.gumroad.com/l/hfxuuz)), or explore the **[French Stripe Editions](https://yannabadie.github.io/facturkit-2027/)**.
 
 ---
