@@ -7,6 +7,7 @@ extraction PDF/A-3 sans dépendance, normes EN 16931 CII et les 4 mentions Franc
 
 from __future__ import annotations
 
+import csv
 import io
 import json
 import os
@@ -173,6 +174,42 @@ class TestFacturXValidator2027(unittest.TestCase):
         with redirect_stderr(err_buf):
             code_missing = fv.main(["./introuvable_404.pdf"])
         self.assertEqual(code_missing, 2)
+
+    def test_cli_csv_batch_export_file_and_stdout(self) -> None:
+        # 1. Export lot complet vers un fichier CSV UTF-8-SIG (Excel-ready)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            csv_file = Path(tmpdir) / "rapport_lot.csv"
+            out_buf = io.StringIO()
+            with redirect_stdout(out_buf):
+                code = fv.main([str(EXAMPLES_DIR), "--csv", str(csv_file), "--quiet-footer"])
+            # examples/ contient 2 factures conformes + 1 non conforme -> code 1
+            self.assertEqual(code, 1)
+            self.assertTrue(csv_file.exists())
+            raw_bytes = csv_file.read_bytes()
+            self.assertTrue(raw_bytes.startswith(b"\xef\xbb\xbf"), "CSV file must carry UTF-8-SIG BOM for Excel")
+
+            with csv_file.open("r", encoding="utf-8-sig", newline="") as fh:
+                rows = list(csv.DictReader(fh))
+            self.assertEqual(len(rows), 4)
+            self.assertEqual(list(rows[0].keys()), list(fv.CSV_FIELDNAMES))
+
+            by_name = {Path(r["source"]).name: r for r in rows}
+            self.assertEqual(by_name["facture_conforme_2027.pdf"]["valid"], "True")
+            self.assertEqual(by_name["facture_conforme_2027.pdf"]["score"], "100")
+            self.assertEqual(by_name["facture_conforme_2027.pdf"]["buyer_siren"], "552100554")
+            self.assertEqual(by_name["facture_conforme_tva_debits_en16931.xml"]["valid"], "True")
+            self.assertEqual(by_name["facture_non_conforme_2027.xml"]["valid"], "False")
+            self.assertGreater(int(by_name["facture_non_conforme_2027.xml"]["errors_count"]), 0)
+
+        # 2. Export CSV direct sur stdout (--csv sans argument ou --csv -)
+        stdout_csv = io.StringIO()
+        with redirect_stdout(stdout_csv):
+            code_ok = fv.main([str(EXAMPLES_DIR / "facture_conforme_2027.pdf"), "--csv", "-"])
+        self.assertEqual(code_ok, 0)
+        parsed_rows = list(csv.DictReader(io.StringIO(stdout_csv.getvalue())))
+        self.assertEqual(len(parsed_rows), 1)
+        self.assertEqual(parsed_rows[0]["invoice_number"], "FAC-2026-0104")
+        self.assertEqual(parsed_rows[0]["valid"], "True")
 
 
 if __name__ == "__main__":

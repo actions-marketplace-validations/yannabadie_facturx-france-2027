@@ -1,7 +1,7 @@
 # Factur-X France 2026–2027 — Validateur Factur-X Python Gratuit (EN 16931 CII / PDF-A3) & GitHub Action
 
 [![CI — Factur-X France 2027](https://github.com/yannabadie/facturx-france-2027/actions/workflows/ci.yml/badge.svg)](https://github.com/yannabadie/facturx-france-2027/actions/workflows/ci.yml)
-[![Release v1.0.0](https://img.shields.io/github/v/release/yannabadie/facturx-france-2027?color=2563eb&label=Release)](https://github.com/yannabadie/facturx-france-2027/releases/latest)
+[![Release v1.1.0](https://img.shields.io/github/v/release/yannabadie/facturx-france-2027?color=2563eb&label=Release)](https://github.com/yannabadie/facturx-france-2027/releases/latest)
 [![Python 3.8+ | Zero Dependency](https://img.shields.io/badge/Python-3.8%2B%20%7C%20Z%C3%A9ro%20d%C3%A9pendance-0f766e)](./facturx_validator_2027.py)
 [![Licence MIT](https://img.shields.io/badge/Licence-MIT-1e293b)](./LICENSE)
 [![Audit Facture en Ligne Gratuit](https://img.shields.io/badge/Testeur%20Web%20Gratuit-Audit%2030s%20(100%25%20Navigateur)-dc2626)](https://yannabadie.github.io/facturkit-2027/audit-facture-gratuit.html)
@@ -94,13 +94,16 @@ python3 facturx_validator_2027.py ./examples/facture_conforme_tva_debits_en16931
 # 3. Auditer un dossier complet de factures en lot (retourne le code 1 si au moins une facture échoue)
 python3 facturx_validator_2027.py ./dossier_factures_fournisseurs/ --strict-2027
 
-# 4. Obtenir un rapport JSON structuré (idéal pour un ERP, n8n, Make ou un webhook interne)
+# 4. Exporter un audit de lot en CSV compatible Excel (idéal cabinets comptables & SaaS)
+python3 facturx_validator_2027.py ./dossier_factures_fournisseurs/ --strict-2027 --csv ./audit_facturx.csv
+
+# 5. Obtenir un rapport JSON structuré (idéal pour un ERP, n8n, Make ou un webhook interne)
 python3 facturx_validator_2027.py ./examples/facture_conforme_2027.pdf --json
 
-# 5. Extraire la pièce jointe XML cachée dans un PDF Factur-X vers un fichier lisible
+# 6. Extraire la pièce jointe XML cachée dans un PDF Factur-X vers un fichier lisible
 python3 facturx_validator_2027.py ./examples/facture_conforme_2027.pdf --extract-xml ./factur-x-extrait.xml
 
-# 6. Vérifier instantanément des numéros SIREN / SIRET (Luhn + règle INSEE La Poste) et calculer la TVA FR
+# 7. Vérifier instantanément des numéros SIREN / SIRET (Luhn + règle INSEE La Poste) et calculer la TVA FR
 python3 facturx_validator_2027.py --check-siren 732829320 552100554 443061841
 ```
 
@@ -179,11 +182,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Valider les factures PDF/A-3 & XML Factur-X ( Norme EN 16931 + France 2027 )
-        uses: yannabadie/facturx-france-2027@v1.0.0
+        uses: yannabadie/facturx-france-2027@v1.1.0
         with:
           target: "./mes-factures-test/"
           strict-2027: "true"
           allow-b2c: "false"
+          csv-output: "./facturx-audit.csv"
 ```
 
 ---

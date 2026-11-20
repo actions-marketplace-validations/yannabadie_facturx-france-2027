@@ -9,7 +9,7 @@ Contrôles effectués localement (100 % hors-ligne, confidentiel RGPD) :
   1. Conteneur hybride PDF/A-3 : extraction de `factur-x.xml` depuis `/EmbeddedFiles`,
      présence de `/AF` (Associated Files) et cohérence XMP `fx:ConformanceLevel`.
   2. Norme européenne EN 16931 / UN-CEFACT CrossIndustryInvoice (CII D16B) :
-     profils Factur-X 1.0.07 (`MINIMUM`, `BASIC WL`, `BASIC`, `EN 16931`, `EXTENDED`),
+     profils Factur-X 1.09.2 / ZUGFeRD 2.5.2 (`MINIMUM`, `BASIC WL`, `BASIC`, `EN 16931`, `EXTENDED`),
      en-tête documentaire, arithmétique stricte des totaux HT / TVA / TTC (`Decimal`).
   3. Les 4 nouvelles mentions obligatoires françaises 2026–2027 (Décret n° 2022-1299 /
      CGI art. 242 nonies A) :
@@ -24,7 +24,7 @@ Contrôles effectués localement (100 % hors-ligne, confidentiel RGPD) :
 
 Exemples d'utilisation :
   python3 facturx_validator_2027.py ./examples/facture_conforme_2027.pdf
-  python3 facturx_validator_2027.py ./examples/ --strict-2027
+  python3 facturx_validator_2027.py ./examples/ --strict-2027 --csv ./audit_lot.csv
   python3 facturx_validator_2027.py ./examples/facture_conforme_2027.pdf --json
   python3 facturx_validator_2027.py ./examples/facture_conforme_2027.pdf --extract-xml ./extrait.xml
   python3 facturx_validator_2027.py --check-siren 732829320 552100554
@@ -33,7 +33,9 @@ Exemples d'utilisation :
 from __future__ import annotations
 
 import argparse
+import csv
 import datetime as dt
+import io
 import json
 import os
 import re
@@ -44,13 +46,13 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "YGN — FacturKit"
 __url__ = "https://yannabadie.github.io/facturkit-2027/"
 __audit_url__ = "https://yannabadie.github.io/facturkit-2027/audit-facture-gratuit.html"
 
 # ---------------------------------------------------------------------------
-# Constantes UN/CEFACT CII D16B & Factur-X 1.0.07 (EN 16931)
+# Constantes UN/CEFACT CII D16B & Factur-X 1.09.2 / ZUGFeRD 2.5.2 (EN 16931)
 # ---------------------------------------------------------------------------
 
 NS_RSM = "urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
@@ -376,7 +378,7 @@ def validate_facturx_bytes(
 ) -> Dict[str, Any]:
     """
     Audite un fichier PDF Factur-X ou XML CII selon :
-      - Le standard hybride PDF/A-3 & Factur-X 1.0.07 (EN 16931 CII)
+      - Le standard hybride PDF/A-3 & Factur-X 1.09.2 (EN 16931 CII)
       - Les 4 mentions obligatoires françaises 2026–2027 (CGI art. 242 nonies A / Décret 2022-1299)
       - La cohérence mathématique stricte des montants, clés Luhn SIREN, TVA FR et IBAN Modulo-97.
     """
@@ -482,7 +484,7 @@ def validate_facturx_bytes(
     if not profile_urn:
         errors.append("Identifiant de profil GuidelineSpecifiedDocumentContextParameter/ram:ID manquant.")
     elif not prof_info:
-        warnings.append(f"URN de profil non standard Factur-X 1.0.07 : {profile_urn}")
+        warnings.append(f"URN de profil non standard Factur-X 1.09.2 : {profile_urn}")
 
     if is_pdf and prof_info and pdf_meta.get("xmp_conformance_level"):
         xmp_lvl = pdf_meta["xmp_conformance_level"].upper()
@@ -1051,6 +1053,87 @@ def _print_human_report(results: Sequence[Dict[str, Any]], quiet_footer: bool = 
         )
 
 
+CSV_FIELDNAMES: Tuple[str, ...] = (
+    "source",
+    "valid",
+    "score",
+    "is_pdf",
+    "profile",
+    "invoice_number",
+    "issue_date",
+    "seller_name",
+    "seller_siren",
+    "buyer_name",
+    "buyer_siren",
+    "operation_category",
+    "distinct_delivery_address",
+    "currency",
+    "tax_basis_ht",
+    "tax_total",
+    "grand_total_ttc",
+    "due_payable",
+    "mention_buyer_siren_ok",
+    "mention_operation_category_ok",
+    "mention_delivery_address_ok",
+    "mention_vat_regime_ok",
+    "errors_count",
+    "warnings_count",
+    "errors",
+    "warnings",
+)
+
+
+def result_to_csv_row(r: Dict[str, Any]) -> Dict[str, Any]:
+    """Convertit un rapport d'audit en ligne plate prête pour Excel / cabinet comptable."""
+    s = r.get("summary") or {}
+    m = r.get("mentions_2027") or {}
+    return {
+        "source": r.get("source") or "",
+        "valid": bool(r.get("valid")),
+        "score": r.get("score", 0),
+        "is_pdf": bool(r.get("is_pdf")),
+        "profile": s.get("profile") or "",
+        "invoice_number": s.get("invoice_number") or "",
+        "issue_date": s.get("issue_date") or "",
+        "seller_name": s.get("seller_name") or "",
+        "seller_siren": s.get("seller_siren") or "",
+        "buyer_name": s.get("buyer_name") or "",
+        "buyer_siren": s.get("buyer_siren") or "",
+        "operation_category": s.get("operation_category") or "",
+        "distinct_delivery_address": bool(s.get("distinct_delivery_address")),
+        "currency": s.get("currency") or "",
+        "tax_basis_ht": s.get("tax_basis_ht") or "",
+        "tax_total": s.get("tax_total") or "",
+        "grand_total_ttc": s.get("grand_total_ttc") or "",
+        "due_payable": s.get("due_payable") or "",
+        "mention_buyer_siren_ok": bool((m.get("buyer_siren") or {}).get("passed")),
+        "mention_operation_category_ok": bool((m.get("operation_category") or {}).get("passed")),
+        "mention_delivery_address_ok": bool((m.get("delivery_address") or {}).get("passed")),
+        "mention_vat_regime_ok": bool((m.get("vat_regime") or {}).get("passed")),
+        "errors_count": len(r.get("errors") or []),
+        "warnings_count": len(r.get("warnings") or []),
+        "errors": " | ".join(r.get("errors") or []),
+        "warnings": " | ".join(r.get("warnings") or []),
+    }
+
+
+def format_results_csv(results: Sequence[Dict[str, Any]], delimiter: str = ",") -> str:
+    """Sérialise une liste de rapports d'audit en CSV UTF-8 (compatible Excel/LibreOffice)."""
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=list(CSV_FIELDNAMES), delimiter=delimiter, lineterminator="\n")
+    writer.writeheader()
+    for r in results:
+        writer.writerow(result_to_csv_row(r))
+    return buf.getvalue()
+
+
+def write_results_csv(results: Sequence[Dict[str, Any]], out_path: Path, delimiter: str = ",") -> Path:
+    """Écrit le rapport CSV avec BOM UTF-8 (utf-8-sig) pour ouverture directe dans Excel."""
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(format_results_csv(results, delimiter=delimiter), encoding="utf-8-sig")
+    return out_path
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="facturx_validator_2027.py",
@@ -1086,6 +1169,17 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--json",
         action="store_true",
         help="Affiche le rapport d'audit complet au format JSON structuré.",
+    )
+    p.add_argument(
+        "--csv",
+        nargs="?",
+        const="-",
+        default=None,
+        metavar="SORTIE_CSV",
+        help=(
+            "Exporte le rapport d'audit en lot au format CSV (compatible Excel UTF-8-SIG). "
+            "Passez un chemin de fichier (ex: --csv audit.csv) ou '--csv' seul / '--csv -' pour stdout."
+        ),
     )
     p.add_argument(
         "--extract-xml",
@@ -1195,10 +1289,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         for f in files
     ]
 
+    if args.csv is not None:
+        if args.csv == "-":
+            sys.stdout.write(format_results_csv(results))
+        else:
+            csv_path = write_results_csv(results, Path(args.csv))
+            if not args.json:
+                print(f"[EXPORT CSV OK] {len(results)} facture(s) exportée(s) -> {csv_path}")
+
     if args.json:
         payload = results[0] if len(results) == 1 else {"count": len(results), "results": results}
         print(json.dumps(payload, indent=2, ensure_ascii=False))
-    else:
+    elif args.csv != "-":
         _print_human_report(results, quiet_footer=args.quiet_footer)
         _emit_github_ci_integration(results)
 

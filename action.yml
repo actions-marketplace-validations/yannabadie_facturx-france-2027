@@ -23,6 +23,10 @@ inputs:
     description: "Affiche le rapport au format JSON structuré (true/false)."
     required: false
     default: "false"
+  csv-output:
+    description: "Chemin optionnel d'export CSV compatible Excel (ex: facturx-audit.csv)."
+    required: false
+    default: ""
 
 outputs:
   exit-code:
@@ -40,6 +44,7 @@ runs:
         INPUT_STRICT: ${{ inputs.strict-2027 }}
         INPUT_ALLOW_B2C: ${{ inputs.allow-b2c }}
         INPUT_JSON: ${{ inputs.json }}
+        INPUT_CSV_OUTPUT: ${{ inputs.csv-output }}
         VALIDATOR_SCRIPT: ${{ github.action_path }}/facturx_validator_2027.py
       run: |
         set +e
@@ -54,6 +59,9 @@ runs:
         fi
         if [ "${INPUT_JSON}" = "true" ]; then
           FLAGS+=("--json")
+        fi
+        if [ -n "${INPUT_CSV_OUTPUT}" ]; then
+          FLAGS+=("--csv" "${INPUT_CSV_OUTPUT}")
         fi
         # shellcheck disable=SC2086
         PYTHONDONTWRITEBYTECODE=1 python3 "${VALIDATOR_SCRIPT}" "${FLAGS[@]}" ${INPUT_TARGET}
