@@ -1,6 +1,6 @@
 name: "Factur-X France 2026-2027 Validator (EN 16931 & PDF/A-3)"
 author: "YGN — FacturKit"
-description: "Valide gratuitement les factures PDF/A-3 Factur-X, XML CII EN 16931 et les 4 mentions obligatoires françaises 2026-2027 (zéro dépendance)."
+description: "Valide en CI les factures PDF/A-3 Factur-X 1.09.2, XML EN 16931 et les 4 mentions françaises 2026-2027 (0 dépendance)."
 
 branding:
   icon: "check-circle"
